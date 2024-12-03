@@ -1,7 +1,7 @@
 #include "md5.h"
+#include "utils.h"
 
 #include <stdio.h>
-#include <string.h>
 
 int32_t sha256(uint8_t **argv) {
     (void)argv;
@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     char *f[] = {"md5", "sha256"};
 
     for (int i = 0; i < 2; ++i) {
-        if (!strcmp(argv[1], f[i]))
+        if (!ft_strcmp(argv[1], f[i]))
             p[i]((uint8_t **)&argv[2]);
     }
     return 0;

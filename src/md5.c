@@ -153,12 +153,34 @@ void print_hexa(uint8_t *str) {
     fprint("\n");
 }
 
-int32_t md5(uint8_t **argv) {
-    md5_context ctx;
-    md5_init(&ctx);
-    md5_update(&ctx, argv[0], ft_strlen((char *)argv[0]));
-    md5_finalize(&ctx);
+static uint32_t parse_arg(uint8_t **argv, md5_param *param) {
+    uint32_t i = 0;
+    while (argv[i]) {
+        if (ft_strcmp(argv[i], "-r"))
+            param->r = true;
+        else if (ft_strcmp(argv[i], "-p"))
+            param->p = true;
+        else if (ft_strcmp(argv[i], "-q"))
+            param->q = true;
+        else if (ft_strcmp(argv[i], "-s"))
+            param->s = true;
+        else
+            break;
+    }
+    return i;
+}
 
-    print_hexa(ctx.digest);
+int32_t md5(uint8_t **argv) {
+    md5_param param;
+    uint32_t i = parse_arg(argv, &param);
+    while (argv[i]) {
+        md5_context ctx = {0};
+        md5_init(&ctx);
+        md5_update(&ctx, argv[0], ft_strlen((char *)argv[0]));
+        md5_finalize(&ctx);
+
+        print_hexa(ctx.digest);
+    }
+
     return 0;
 }
