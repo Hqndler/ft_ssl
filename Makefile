@@ -10,7 +10,7 @@ SRC_DIR	=	src/
 OBJ_DIR	=	obj/
 
 #Source
-FILES	=	main
+FILES	=	main md5 fprint utils
 
 SRCS	=	$(addprefix $(SRC_DIR), $(addsuffix .c, $(FILES)))
 OBJS	=	$(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES)))
@@ -24,7 +24,7 @@ OBJF	=	.cache_exits
 $(OBJF) :
 	@mkdir -p $(OBJ_DIR)
 
-vpath %.c 
+vpath %.c $(SRC_DIR)
 vpath %.h include/
 
 all : $(NAME)
@@ -39,12 +39,12 @@ $(OBJ_DIR)%.o : %.c $(HEADER) Makefile | $(OBJF)
 	$(CC) $(FLAG) $(INCLUDE) -c $< -o $@
 
 clean :
-	@ make clean -sC $(DIRLIB)
+	# @ make clean -sC $(DIRLIB)
 	@rm -rf $(OBJ_DIR)
 	@rm -rf $(OBJF)
 
 fclean : clean
-	@ make fclean -sC $(DIRLIB)
+	# @ make fclean -sC $(DIRLIB)
 	@rm -rf $(NAME)
 
 re : fclean all
