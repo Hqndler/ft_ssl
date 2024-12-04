@@ -20,3 +20,68 @@ int32_t ft_strcmp(char const *s1, char const *s2) {
 	}
 	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }
+
+void *ft_memmove(void *destination, void const *source, size_t size) {
+	size_t i;
+	unsigned char *d;
+	unsigned char *s;
+
+	d = (unsigned char *)destination;
+	s = (unsigned char *)source;
+	i = -1;
+	if (d > s)
+		while (size-- > 0)
+			d[size] = s[size];
+	else
+		while (++i < size)
+			d[i] = s[i];
+	return (destination);
+}
+
+
+void *ft_calloc(uint32_t size) {
+	char *ptr = malloc(size);
+	if (!ptr)
+		return NULL;
+	while (--size)
+		ptr[size] = 0;
+	ptr[0] = 0;
+	return (void *)ptr;
+}
+
+void *ft_realloc(void *ptr, size_t new_size) {
+	size_t old_size = ft_strlen((char *)ptr);
+	if (new_size <= old_size)
+		return ptr;
+	void *new = ft_calloc(new_size);
+	if (!new)
+		return NULL;
+	ft_memmove(new, ptr, old_size);
+	if (old_size)
+		free(ptr);
+	return new;
+}
+
+char	*ft_strcat(char *s1, char *s2)
+{
+	if (!s1 || !s2)
+		return (NULL);
+
+	int	len = ft_strlen(s1);
+	int j = -1;
+	while (s2[++j])
+		s1[len + j] = s2[j];
+	s1[len + j] = 0;
+	return (s1);
+}
+
+char *ft_strdup(char *str) {
+	char *dup = malloc(ft_strlen(str) + 1);
+	if (!dup)
+		return NULL;
+	uint32_t i = -1;
+	while (str[++i])
+		dup[i] = str[i];
+	dup[i] = 0;
+	return dup;
+}

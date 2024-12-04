@@ -10,13 +10,13 @@ SRC_DIR	=	src/
 OBJ_DIR	=	obj/
 
 #Source
-FILES	=	main md5 fprint utils
+FILES	=	main md5 fprint utils get_next_line
 
 SRCS	=	$(addprefix $(SRC_DIR), $(addsuffix .c, $(FILES)))
 OBJS	=	$(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES)))
 
 INCLUDE	=	-I ./include # -I ./Libft
-HNAME	=	md5 sha256
+HNAME	=	md5 sha256 get_next_line utils
 HEADER	=	$(addsuffix .h, $(HNAME))
 
 OBJF	=	.cache_exits

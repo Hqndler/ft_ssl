@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdint.h>
+#include "ft_ssl.h"
+
 #include <stdlib.h>
-#include <stdbool.h>
 
 typedef struct {
 	uint64_t	size;         // Size of input in bytes
@@ -11,11 +11,4 @@ typedef struct {
 	uint8_t		digest[16];   // Result of algorithm
 }	md5_context;
 
-typedef struct {
-	bool	p;
-	bool	q;
-	bool	r;
-	bool	s;
-} md5_param;
-
-int32_t md5(uint8_t **argv);
+int32_t md5(uint8_t **argv, ft_ssl_param param, int argc);
