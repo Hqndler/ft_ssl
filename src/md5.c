@@ -99,13 +99,24 @@ void md5_init(md5_context *ctx){
 	ctx->buffer[3] = (uint32_t)h3;
 }
 
+int read_file(md5_context *ctx, uint8_t *input_buffer) {
+	if (ctx->fd)
+		return read(ctx->fd, ctx->input, 64);
+	ft_strncpy(ctx->input, input_buffer, 64);
+	(*input_buffer) += 64;
+}
+
 void md5_update(md5_context *ctx, uint8_t *input_buffer, size_t input_len){
 	uint32_t input[16];
 	unsigned int offset = ctx->size % 64;
 	ctx->size += (uint64_t)input_len;
 
-	for(unsigned int i = 0; i < input_len; ++i){
-		ctx->input[offset++] = (uint8_t)*(input_buffer + i);
+	// for(unsigned int i = 0; i < input_len; ++i){
+	while (1) {
+		// ctx->input[offset++] = (uint8_t)*(input_buffer + i);
+		offset += read_file(ctx, input_buffer);
+		if (offset != 64)
+			break;
 
 		if(offset % 64 == 0){
 			for(unsigned int j = 0; j < 16; ++j){

@@ -14,3 +14,4 @@ void *ft_realloc(void *ptr, size_t new_size);
 void *ft_calloc(uint32_t size);
 void *ft_memmove(void *destination, void const *source, size_t size);
 char *ft_strdup(char *str);
+char *ft_strncpy(char *dest, char *src, size_t size) ;

@@ -85,3 +85,12 @@ char *ft_strdup(char *str) {
 	dup[i] = 0;
 	return dup;
 }
+
+char *ft_strncpy(char *dest, char *src, size_t size) {
+	size_t i = 0;
+	while (src[i] && i < size) {
+		dest[i] = src[i];
+		++i;
+	}
+	return dest;
+}
