@@ -197,14 +197,14 @@ void md5_verbose(ft_ssl_param param, char *input, int file, int stdin) {
 	if (!stdin)
 		fprint("MD5 ");
 	if (!param.p && stdin)
-		return fprint("(stdin) = ");
+		return fprint("(stdin)= ");
 	else if (file)
 		return fprint("(%s) = ", input);
 	int t = ft_strlen(input);
 	if (input[t - 1] != '\n')
 		return fprint("(\"%s\") = ", input);
 	input[t - 1] = 0;
-	fprint("(\"%s\") = ", input);
+	fprint("(\"%s\")= ", input);
 	input[t - 1] = '\n';
 }
 
