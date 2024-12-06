@@ -90,6 +90,10 @@ void md5_step(uint32_t *buffer, uint32_t *input){
 	buffer[3] += DD;
 }
 
+void print_md5_context(md5_context ctx) {
+	fprint("MD5_CONTEXT : %d [%s]", ctx.size, ctx.input);
+}
+
 void md5_init(md5_context *ctx){
 	ctx->size = (uint64_t)0;
 
@@ -99,26 +103,73 @@ void md5_init(md5_context *ctx){
 	ctx->buffer[3] = (uint32_t)h3;
 }
 
-int read_file(md5_context *ctx, uint8_t *input_buffer) {
-	if (ctx->fd)
-		return read(ctx->fd, ctx->input, 64);
-	ft_strncpy(ctx->input, input_buffer, 64);
-	(*input_buffer) += 64;
+static int flush_buffer(char *buffer, int index) {
+	ft_memset(buffer, 0, index);
+	return 0;
 }
 
-void md5_update(md5_context *ctx, uint8_t *input_buffer, size_t input_len){
+static void add_buffer(char *str, uint8_t isprint, uint8_t flush) {
+	static char buffer[520] = {0};
+	static int index = 0;
+
+	if (flush && isprint && index) {
+		fprint("%s\") = ", buffer);
+		index = flush_buffer(buffer, index);
+		return;
+	}
+
+	if (flush){
+		index = flush_buffer(buffer, index);
+		return;
+	}
+	
+	if (index + ft_strlen(str) >= 512){
+		if (isprint)
+			fprint("%s...\") = ", buffer);
+		index = flush_buffer(buffer, index);
+	}
+	ft_strcat(buffer, str);
+	index += ft_strlen(str);
+	fprint("[%s] add buffer function\n", str);
+}
+
+int read_file(md5_context *ctx, uint8_t **input_buffer) {
+	if (ctx->fd >= 0)
+		return read(ctx->fd, ctx->input, 64);
+	ft_strncpy((char *)ctx->input, (char *)*input_buffer, 64);
+	(*input_buffer) += 64;
+	return 64;
+}
+
+void md5_update(md5_context *ctx, uint8_t *input_buffer, ft_ssl_param param){
 	uint32_t input[16];
 	unsigned int offset = ctx->size % 64;
-	ctx->size += (uint64_t)input_len;
+	// ctx->size += (uint64_t)input_len;
+	if (ctx->fd < 0)
+		ctx->size -= ctx->fd;
 
 	// for(unsigned int i = 0; i < input_len; ++i){
 	while (1) {
 		// ctx->input[offset++] = (uint8_t)*(input_buffer + i);
-		offset += read_file(ctx, input_buffer);
-		if (offset != 64)
+		int tmp;
+		if (ctx->fd < 0)
+			tmp = -(ctx->fd);
+		else
+			tmp = read_file(ctx, &input_buffer);
+		fprint("md5 update tmp %d [%s]\n", tmp, ctx->input);
+		if (tmp <= 0)
 			break;
+		offset += tmp;
+		if (offset != 64) {
+			if (ctx->fd >= 0)
+				ctx->size += offset;
+			break;
+		}
+		if (!param.q)
+			add_buffer((char *)ctx->input, 0, 0);
 
 		if(offset % 64 == 0){
+			ctx->size += 64;
 			for(unsigned int j = 0; j < 16; ++j){
 				input[j] = (uint32_t)(ctx->input[(j * 4) + 3]) << 24 |
 						   (uint32_t)(ctx->input[(j * 4) + 2]) << 16 |
@@ -131,13 +182,16 @@ void md5_update(md5_context *ctx, uint8_t *input_buffer, size_t input_len){
 	}
 }
 
-void md5_finalize(md5_context *ctx){
+void md5_finalize(md5_context *ctx, ft_ssl_param param){
 	uint32_t input[16];
 	unsigned int offset = ctx->size % 64;
 	unsigned int padding_length = offset < 56 ? 56 - offset : (56 + 64) - offset;
 
-	md5_update(ctx, PADDING, padding_length);
+	ctx->fd = -padding_length;
+	fprint("paddinf len : %d\n", padding_length);
+	md5_update(ctx, PADDING, param);
 	ctx->size -= (uint64_t)padding_length;
+	print_md5_context(*ctx);
 
 	for(unsigned int j = 0; j < 14; ++j){
 		input[j] = (uint32_t)(ctx->input[(j * 4) + 3]) << 24 |
@@ -158,43 +212,27 @@ void md5_finalize(md5_context *ctx){
 	}
 }
 
-static uint8_t *get_file(char *file) {
-	int fd = 0;
-	char * str;
-	
-	if (file) {
-		fd = open(file, O_RDONLY);
-		if (fd < 0)
-			return NULL;
-	}
-	
-	char *content = malloc(1);
-	if (!content)
-		return NULL;
-	content[0] = 0;
-	
-	while (1) {
-		if (!(str = get_next_line(fd)))
-			break;
-		content = realloc(content, ft_strlen(content) + ft_strlen(str) + 1);
-		ft_strcat(content, str);
-		free(str);
-	}
-	return (uint8_t *)content;
-}
-
 void print_hexa(uint8_t *str, ft_ssl_param param, uint32_t len) {
 	(void)param;
 	for (uint32_t i = 0; i < len; ++i)
 		fprint("%02x", str[i]);
 }
 
-void md5_compute(uint8_t *input, ft_ssl_param param) {
-	md5_context ctx = {0};
-	md5_init(&ctx);
-	md5_update(&ctx, input, ft_strlen((char *)input));
-	md5_finalize(&ctx);
-	print_hexa(ctx.digest, param, 16);
+void md5_verbose(ft_ssl_param param, char *input, int file, int stdin) {
+	if (!stdin)
+		fprint("MD5 ");
+	if (!param.p && stdin)
+		return fprint("(stdin)= ");
+	else if (file)
+		return fprint("(%s) = ", input);
+	fprint("(\"");
+}
+
+int open_file(md5_context *ctx, char *input) {
+	ctx->fd = open(input, O_RDONLY);
+	if (ctx->fd < 0)
+		return fprint("ft_ssl: md5: %s\n", strerror(errno)), 1;
+	return 0;
 }
 
 void md5_reverse(char *input, int file) {
@@ -203,20 +241,26 @@ void md5_reverse(char *input, int file) {
 	fprint(" %s", input);
 }
 
-void md5_verbose(ft_ssl_param param, char *input, int file, int stdin) {
-	(void)file;
-	if (!stdin)
-		fprint("MD5 ");
-	if (!param.p && stdin)
-		return fprint("(stdin)= ");
-	else if (file)
-		return fprint("(%s) = ", input);
-	int t = ft_strlen(input);
-	if (input[t - 1] != '\n')
-		return fprint("(\"%s\") = ", input);
-	input[t - 1] = 0;
-	fprint("(\"%s\")= ", input);
-	input[t - 1] = '\n';
+void md5_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
+	md5_context ctx = {0};
+
+	md5_init(&ctx);
+	
+	if (!param.q && !param.q)
+		md5_verbose(param, (char *)input, file, stdin);
+	if (file && open_file(&ctx, (char *)input))
+		return;
+	
+	md5_update(&ctx, input, param);
+	print_md5_context(ctx);
+	fprint("finalize\n");
+	md5_finalize(&ctx, param);
+	print_md5_context(ctx);
+	add_buffer(NULL, !file, 1);
+	print_hexa(ctx.digest, param, 16);
+	
+	if (!param.q && param.r && !stdin)
+		md5_reverse((char *)input, file);
 }
 
 int check_files(char ** argv) {
@@ -236,50 +280,48 @@ int check_files(char ** argv) {
 
 int32_t md5(uint8_t **argv, ft_ssl_param param, int argc) {
 	int i = -1;
-	uint8_t *ptr = NULL;
+	// uint8_t *ptr = NULL;
 
 	if (param.p || check_files((char **)argv) == 0) {
-		// fprint("allo ?");
-		ptr = get_file(NULL);
-		if (!param.q)
-			md5_verbose(param, (char *)ptr, 0, 1);
+		fprint("allo ?\n");
+		// ptr = get_file(NULL);
 
-		if (*(uint32_t *)&param == 16843009)
-			fprint("%s", (char *)ptr);
+		// if (*(uint32_t *)&param == 16843009)
+			// fprint("%s", (char *)ptr);
 
-		md5_compute(ptr, param);
+		md5_compute(NULL, param, 0, 0);
 
 		fprint("\n");
 	}
 
 	while (++i < argc) {
 
-		// fprint("%d %d %s\n", i, argc - 1, argv[i]);
+		fprint("%d %d %s\n", i, argc - 1, argv[i]);
 
-		if (param.s && i == 0) {
-			ptr = (uint8_t *)ft_strdup((char *)argv[i]);
-			if (!ptr)
-				return fprint("Malloc error\n"), 1;
-		}
-		else
-			ptr = get_file((char *)argv[i]);
+		// if (!(param.s && i == 0)) {
+			// ptr = (uint8_t *)ft_strdup((char *)argv[i]);
+			// if (!ptr)
+				// return fprint("Malloc error\n"), 1;
+		// }
+		// else
+			// ptr = get_file((char *)argv[i]);
 
 		// fprint("%s", (char *)ptr);
-		if (!ptr) {
-			fprint("%s: no such file or directory\n", argv[i]);
-			continue;
-		}
+		// if (!ptr) {
+			// fprint("%s: no such file or directory\n", argv[i]);
+			// continue;
+		// }
 
-		if (!param.r && !param.q)
-			md5_verbose(param, (param.s && i == 0) ? (char *)ptr : (char *)argv[i], \
-							   (param.s && i == 0) ? 0 : 1, 0);
+		// if (!param.r && !param.q)
+			// md5_verbose(param, (param.s && i == 0) ? (char *)ptr : (char *)argv[i], 
+							//    (param.s && i == 0) ? 0 : 1, 0);
 
-		md5_compute(ptr, param);
+		md5_compute(argv[i], param, (param.s && i == 0) ? 0 : 1, 0);
 
-		if (param.r && !param.q)
-			md5_reverse((param.s && i == 0) ? (char *)ptr : (char *)argv[i], \
-			 			(param.s && i == 0) ? 0 : 1);
-		free(ptr);
+		// if (param.r && !param.q)
+		// 	md5_reverse((param.s && i == 0) ? (char *)ptr : (char *)argv[i], 
+		// 	 			(param.s && i == 0) ? 0 : 1);
+		// free(ptr);
 		fprint("\n");
 	}
 

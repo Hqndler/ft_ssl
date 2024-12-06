@@ -94,3 +94,27 @@ char *ft_strncpy(char *dest, char *src, size_t size) {
 	}
 	return dest;
 }
+
+void *ft_memcpy(void *destination, void const *source, size_t size) {
+	uint8_t *d;
+	uint8_t *s;
+	size_t i;
+
+	d = (uint8_t *)destination;
+	s = (uint8_t *)source;
+	i = -1;
+	while (++i < size)
+		d[i] = s[i];
+	return (destination);
+}
+
+void *ft_memset(void *pointer, uint8_t value, size_t count) {
+	uint8_t *str;
+
+	str = pointer;
+	while (count--) {
+		*str = (uint8_t)value;
+		str++;
+	}
+	return (pointer);
+}

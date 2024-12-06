@@ -1,5 +1,7 @@
 #pragma once
 #include <stdint.h>
+#include <errno.h>
+#include <string.h>
 
 typedef struct __attribute__((packed)) {
 	uint8_t p;
