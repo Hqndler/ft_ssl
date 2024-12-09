@@ -10,13 +10,13 @@ SRC_DIR	=	src/
 OBJ_DIR	=	obj/
 
 #Source
-FILES	=	main md5 fprint utils get_next_line
+FILES	=	main md5 fprint utils ssl_utils sha256
 
 SRCS	=	$(addprefix $(SRC_DIR), $(addsuffix .c, $(FILES)))
 OBJS	=	$(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES)))
 
-INCLUDE	=	-I ./include # -I ./Libft
-HNAME	=	md5 sha256 get_next_line utils
+INCLUDE	=	-I ./include# -I ./Libft
+HNAME	=	md5 sha256 utils
 HEADER	=	$(addsuffix .h, $(HNAME))
 
 OBJF	=	.cache_exits
@@ -30,7 +30,6 @@ vpath %.h include/
 all : $(NAME)
 
 $(NAME) : $(OBJS)
-	# make -C $(DIRLIB)
 	$(CC) $(FLAG) $(OBJS) $(INCLUDE) -o $(NAME)
 	@echo "$(GREEN)Compiled!$(DEF_COLOR)"
 	@echo "Launch the program with $(RED)./${NAME} $(DEF_COLOR)"
@@ -38,18 +37,20 @@ $(NAME) : $(OBJS)
 $(OBJ_DIR)%.o : %.c $(HEADER) Makefile | $(OBJF)
 	$(CC) $(FLAG) $(INCLUDE) -c $< -o $@
 
+md5_test:
+	@sh test/md5test.sh > test/output.txt
+	diff test/expected.txt test/output.txt
+
 clean :
-	# @ make clean -sC $(DIRLIB)
 	@rm -rf $(OBJ_DIR)
 	@rm -rf $(OBJF)
 
 fclean : clean
-	# @ make fclean -sC $(DIRLIB)
 	@rm -rf $(NAME)
 
 re : fclean all
 
-.PHONY : all clean fclean re
+.PHONY : all clean fclean re md5_test
 
 # Color
 DEF_COLOR	= \033[0;39m
