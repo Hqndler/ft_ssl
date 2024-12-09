@@ -5,6 +5,9 @@
 
 #include <stdio.h>
 
+#define NBCOMMANDS 2
+#define NBFLAGS 4
+
 static uint32_t parse_arg(char **argv, ft_ssl_param *param) {
 	uint32_t i = -1;
 	while (argv[++i]) {
@@ -34,13 +37,27 @@ static int32_t wrapper(int32_t (*p)(uint8_t **, ft_ssl_param, int), uint8_t ** a
 
 int main(int argc, char **argv) {
 	if (argc < 2)
-		return 0;
+		return fprint("usage: ft_ssl command [flags] [file/string]\n"), 0;
 	int32_t (*p[2])(uint8_t **, ft_ssl_param, int) = {md5, sha256};
 	char *f[] = {"md5", "sha256"};
+	char *o[] = {"-p", "-q", "-r", "-s"};
+	int check = -1;
 
-	for (int i = 0; i < 2; ++i) {
+	for (int i = 0; i < NBCOMMANDS; ++i) {
 		if (!ft_strcmp(argv[1], f[i]))
-			wrapper(p[i], (uint8_t **)&argv[2], argc - 2);
+			check = check && wrapper(p[i], (uint8_t **)&argv[2], argc - 2);
 	}
-	return 0;
+	if (check == -1) {
+		fprint("ft_ssl: Error: '%s' is an invalid command.\n", argv[1]);
+		fprint("\nCommands:\n");
+		for (int i = 0; i < NBCOMMANDS; ++i)
+			fprint("%s\n", f[i]);
+		fprint("\nFlags:\n");
+		for (int i = 0; i < NBFLAGS; ++i)
+			fprint("%s ", o[i]);
+		fprint("\n");
+		check = -check;
+	}
+
+	return check;
 }
