@@ -43,9 +43,8 @@ uint32_t h3 = 0x10325476;
 #define H(B, C, D) (B ^ C ^ D);
 #define I(B, C, D) (C ^ (B | ~D));
 
-uint32_t rotate_left(uint32_t n, uint32_t s) {
-	return (n << s) | (n >> (32 - s));
-}
+
+#define ROTATE_LEFT(N, S) ((N << S) | (N >> (32 - S)))
 
 void md5_step(uint32_t *buffer, uint32_t *input){
 	uint32_t AA = buffer[0];
@@ -80,7 +79,7 @@ void md5_step(uint32_t *buffer, uint32_t *input){
 		uint32_t temp = DD;
 		DD = CC;
 		CC = BB;
-		BB = BB + rotate_left(AA + E + K[i] + input[j], R[i]);
+		BB = BB + ROTATE_LEFT((AA + E + K[i] + input[j]), (R[i]));
 		AA = temp;
 	}
 
@@ -88,10 +87,6 @@ void md5_step(uint32_t *buffer, uint32_t *input){
 	buffer[1] += BB;
 	buffer[2] += CC;
 	buffer[3] += DD;
-}
-
-void print_md5_context(md5_context ctx) {
-	fprint("MD5_CONTEXT : %d [%s]", ctx.size, ctx.input);
 }
 
 void md5_init(md5_context *ctx){
@@ -117,7 +112,7 @@ static void add_buffer(char *str, uint8_t isprint, uint8_t flush) {
 		if (buffer[index - 1] == '\n')
 			buffer[index - 1] = 0;
 		if (!str)
-			fprint("%s\") = ", buffer);
+			fprint("%s\")= ", buffer);
 		else
 			fprint("%s", buffer);
 	}
@@ -130,7 +125,7 @@ static void add_buffer(char *str, uint8_t isprint, uint8_t flush) {
 	
 	if (str && index + ft_strlen(str) >= 512){
 		if (isprint)
-			fprint("%s...\") = ", buffer);
+			fprint("%s...\")= ", buffer);
 		index = flush_buffer(buffer, index);
 		check = 1;
 	}
@@ -199,9 +194,7 @@ void md5_finalize(md5_context *ctx, ft_ssl_param param){
 	unsigned int offset = ctx->size % 64;
 	unsigned int padding_length = offset < 56 ? 56 - offset : (56 + 64) - offset;
 
-	// fprint("padding len : %d\n", padding_length);
 	md5_final_update(ctx, PADDING, padding_length);
-	// print_md5_context(*ctx);
 
 	for(unsigned int j = 0; j < 14; ++j){
 		input[j] = (uint32_t)(ctx->input[(j * 4) + 3]) << 24 |
@@ -278,6 +271,9 @@ void md5_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
 	
 	if (!param.q && param.r && !stdin)
 		md5_reverse((char *)input, file);
+
+	if (ctx.fd > 0)
+		close(ctx.fd);
 }
 
 int check_files(char ** argv) {
