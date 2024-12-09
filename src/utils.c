@@ -86,14 +86,14 @@ char *ft_strdup(char *str) {
 	return dup;
 }
 
-char *ft_strncpy(char *dest, char *src, size_t size) {
+size_t ft_strncpy(char *dest, char *src, size_t size) {
 	size_t i = 0;
 	while (src[i] && i < size) {
 		dest[i] = src[i];
 		++i;
 	}
 	dest[i] = 0;
-	return dest;
+	return i;
 }
 
 void *ft_memcpy(void *destination, void const *source, size_t size) {
