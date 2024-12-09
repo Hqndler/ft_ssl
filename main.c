@@ -1,15 +1,9 @@
 #include "md5.h"
+#include "sha256.h"
 #include "utils.h"
 #include "ft_ssl.h"
 
 #include <stdio.h>
-
-int32_t sha256(uint8_t **argv, ft_ssl_param param, int argc) {
-	(void)argv;
-	(void)argc;
-	(void)param;
-	return printf("inside sha256 %s\n", argv[0]);
-}
 
 static uint32_t parse_arg(char **argv, ft_ssl_param *param) {
 	uint32_t i = -1;
