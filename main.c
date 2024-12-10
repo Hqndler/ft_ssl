@@ -3,9 +3,6 @@
 #include "utils.h"
 #include "ft_ssl.h"
 
-#include <stdio.h>
-
-#define NBCOMMANDS 2
 #define NBFLAGS 4
 
 static uint32_t parse_arg(char **argv, ft_ssl_param *param) {
@@ -39,18 +36,19 @@ int main(int argc, char **argv) {
 	char *f[] = {"md5", "sha256"};
 	char *o[] = {"-p", "-q", "-r", "-s"};
 	int check = -1;
+	int nb_cmd = (sizeof(p) / sizeof(int32_t *));
 
-	for (int i = 0; i < NBCOMMANDS; ++i) {
+	for (int i = 0; i < nb_cmd; ++i) {
 		if (!ft_strcmp(argv[1], f[i]))
 			check = check && wrapper(p[i], (uint8_t **)&argv[2], argc - 2);
 	}
 	if (check == -1) {
 		fprint("ft_ssl: Error: '%s' is an invalid command.\n", argv[1]);
 		fprint("\nCommands:\n");
-		for (int i = 0; i < NBCOMMANDS; ++i)
+		for (int i = 0; i < nb_cmd; ++i)
 			fprint("%s\n", f[i]);
 		fprint("\nFlags:\n");
-		for (int i = 0; i < NBFLAGS; ++i)
+		for (int i = 0; i < (int)(sizeof(o) / sizeof(char *)); ++i)
 			fprint("%s ", o[i]);
 		fprint("\n");
 		check = -check;
