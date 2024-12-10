@@ -119,7 +119,7 @@ void md5_update(md5_context *ctx, uint8_t *buffer, ft_ssl_param param){
 		ctx->size += offset;
 		ctx->input[tmp] = 0;
 		if (!param.q || !ctx->fd)
-			add_buffer((char *)ctx->input, 0, 0);
+			add_buffer((char *)ctx->input, 0);
 		if (offset != 64)
 			break;
 
@@ -175,14 +175,14 @@ static int open_file(md5_context *ctx, char *input) {
 	return 0;
 }
 
-void md5_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
+int32_t md5_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
 	md5_context ctx = {0};
 
 	md5_init(&ctx);
 	ctx.fd = !(!file && !stdin) - 1;
 	
 	if (file && open_file(&ctx, (char *)input))
-		return;
+		return 1;
 	
 	md5_update(&ctx, input, param);
 	md5_finalize(&ctx);
@@ -194,13 +194,12 @@ void md5_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
 	}
 	
 	if (stdin && !file && (*(uint32_t *)&param == 16843009)) {
-		add_buffer("FUCK", 1, 1);
+		add_buffer("MD5", 1);
 		fprint("\n");
 	}
 	else if ((!param.q && param.p && stdin) || (!param.q && !file && !stdin && !param.r))
-		add_buffer(NULL, 1, 1);
-	else
-		add_buffer(NULL, 0, 1);
+		add_buffer(NULL, 1);
+	ft_memset(get_buffer(), 0, BUFFER_LEN);
 	print_hexa(ctx.digest, 16);
 	
 	if (!param.q && param.r && !stdin)
@@ -208,20 +207,22 @@ void md5_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
 
 	if (ctx.fd > 0)
 		close(ctx.fd);
+	return 0;
 }
 
 int32_t md5(uint8_t **argv, ft_ssl_param param, int argc) {
 	int i = -1;
+	int ret = 0;
 
-	if (param.p || check_files((char **)argv) == 0 - param.s){
-		md5_compute(NULL, param, 0, 1);
+	if (param.p || (!argc && !param.s)) {
+		ret = (ret | md5_compute(NULL, param, 0, 1));
 		fprint("\n");
 	}
 
 	while (++i < argc) {
-		md5_compute(argv[i], param, !(param.s && i == 0), 0);
+		ret = (ret | md5_compute(argv[i], param, !(param.s && i == 0), 0));
 		fprint("\n");
 	}
 
-	return 0;
+	return ret;
 }

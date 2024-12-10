@@ -1,6 +1,6 @@
 NAME	=	ft_ssl
 CC		=	clang
-FLAG	=	-Wall -Wextra -Werror -Ofast
+FLAG	=	-Wall -Wextra -Werror -g3
 
 # DIRLIB	=	./Libft/
 # FILELIB	=	libft.a

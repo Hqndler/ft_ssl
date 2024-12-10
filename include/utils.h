@@ -6,6 +6,8 @@
 
 #include "ft_ssl.h"
 
+#define BUFFER_LEN 520
+
 void fprint(char const *fmt, ...);
 
 int32_t ft_strlen(const char *str);
@@ -21,9 +23,9 @@ void	*ft_memcpy(void *destination, void const *source, size_t size);
 void	*ft_memset(void *pointer, uint8_t value, size_t count);
 
 /*	 SSL Utils	 */
-void		print_hexa(uint8_t *str, uint32_t len);
-int			read_file(int fd, uint8_t *input, uint8_t **buffer, uint32_t len);
-void		add_buffer(char *str, uint8_t isprint, uint8_t flush);
-uint32_t	check_files(char **argv);
-void		alg_verbose(ft_ssl_param param, char *input, int file, int stdin);
-void 		alg_reverse(char *input, int file);
+void	print_hexa(uint8_t *str, uint32_t len);
+int		read_file(int fd, uint8_t *input, uint8_t **buffer, uint32_t len);
+void	add_buffer(char *str, uint8_t isprint);
+char	*get_buffer(void);
+void	alg_verbose(ft_ssl_param param, char *input, int file, int stdin);
+void 	alg_reverse(char *input, int file);

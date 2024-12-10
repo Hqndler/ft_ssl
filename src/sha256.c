@@ -86,7 +86,7 @@ void sha256_update(sha256_context *ctx, uint8_t *buffer, ft_ssl_param param) {
 			break;
 		ctx->datalen += tmp;
 		if (!param.q || !ctx->fd)
-			add_buffer((char *)ctx->data, 0, 0);
+			add_buffer((char *)ctx->data, 0);
 		
 		if (ctx->datalen == 64) {
 			sha256_transform(ctx, ctx->data);
@@ -148,14 +148,14 @@ static int open_file(sha256_context *ctx, char *input) {
 	return 0;
 }
 
-void sha256_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
+int32_t sha256_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
 	sha256_context ctx = {0};
 
 	sha256_init(&ctx);
 	ctx.fd = !(!file && !stdin) - 1;
 	
 	if (file && open_file(&ctx, (char *)input))
-		return;
+		return 1;
 	
 	sha256_update(&ctx, input, param);
 	sha256_finalize(&ctx);
@@ -167,13 +167,12 @@ void sha256_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
 	}
 	
 	if (stdin && !file && (*(uint32_t *)&param == 16843009)) {
-		add_buffer("FUCK", 1, 1);
+		add_buffer("SHA256", 1);
 		fprint("\n");
 	}
 	else if ((!param.q && param.p && stdin) || (!param.q && !file && !stdin && !param.r))
-		add_buffer(NULL, 1, 1);
-	else
-		add_buffer(NULL, 0, 1);
+		add_buffer(NULL, 1);
+	ft_memset(get_buffer(), 0, BUFFER_LEN);
 	print_hexa(ctx.digest, 32);
 	
 	if (!param.q && param.r && !stdin)
@@ -181,20 +180,22 @@ void sha256_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
 
 	if (ctx.fd > 0)
 		close(ctx.fd);
+	return 0;
 }
 
 int32_t sha256(uint8_t **argv, ft_ssl_param param, int argc) {
 	int i = -1;
+	int ret = 0;
 
-	if (param.p || check_files((char **)argv) == 0 - param.s){
-		sha256_compute(NULL, param, 0, 1);
+	if (param.p || (!argc && !param.s)){
+		ret |= sha256_compute(NULL, param, 0, 1);
 		fprint("\n");
 	}
 
 	while (++i < argc) {
-		sha256_compute(argv[i], param, !(param.s && i == 0), 0);
+		ret = ret | sha256_compute(argv[i], param, !(param.s && i == 0), 0);
 		fprint("\n");
 	}
 
-	return 0;
+	return ret;
 }

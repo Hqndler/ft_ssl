@@ -29,10 +29,7 @@ static int32_t wrapper(int32_t (*p)(uint8_t **, ft_ssl_param, int), uint8_t ** a
 	ft_ssl_param param = {};
 	uint32_t i = parse_arg((char **)argv, &param);
 
-	// fprint("p = %d, q = %d, r = %d, s = %d\n", param.p, param.q, param.r, param.s);
-
-	p(&argv[i], param, argc - i);
-	return 0;
+	return p(&argv[i], param, argc - i);
 }
 
 int main(int argc, char **argv) {
