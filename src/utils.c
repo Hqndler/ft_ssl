@@ -38,30 +38,6 @@ void *ft_memmove(void *destination, void const *source, size_t size) {
 	return (destination);
 }
 
-
-void *ft_calloc(uint32_t size) {
-	char *ptr = malloc(size);
-	if (!ptr)
-		return NULL;
-	while (--size)
-		ptr[size] = 0;
-	ptr[0] = 0;
-	return (void *)ptr;
-}
-
-void *ft_realloc(void *ptr, size_t new_size) {
-	size_t old_size = ft_strlen((char *)ptr);
-	if (new_size <= old_size)
-		return ptr;
-	void *new = ft_calloc(new_size);
-	if (!new)
-		return NULL;
-	ft_memmove(new, ptr, old_size);
-	if (old_size)
-		free(ptr);
-	return new;
-}
-
 char	*ft_strcat(char *s1, char *s2)
 {
 	if (!s1 || !s2)
@@ -73,17 +49,6 @@ char	*ft_strcat(char *s1, char *s2)
 		s1[len + j] = s2[j];
 	s1[len + j] = 0;
 	return (s1);
-}
-
-char *ft_strdup(char *str) {
-	char *dup = malloc(ft_strlen(str) + 1);
-	if (!dup)
-		return NULL;
-	uint32_t i = -1;
-	while (str[++i])
-		dup[i] = str[i];
-	dup[i] = 0;
-	return dup;
 }
 
 size_t ft_strncpy(char *dest, char *src, size_t size) {
