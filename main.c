@@ -33,8 +33,6 @@ static int32_t cipher_wrapper(int32_t (*p)(uint8_t **, ft_ssl_param, int), uint8
 	ft_ssl_param param = {};
 	uint32_t i = parse_arg((char **)argv, &param);
 
-	
-
 	return p(&argv[i], param, argc - i);
 }
 
@@ -80,7 +78,7 @@ int main(int argc, char **argv) {
 
 	for (int i = nb_mdc; i < nb_mdc + nb_cm; ++i) {
 		if (!ft_strcmp(argv[1], name[i]))
-			check = check && cipher_wrapper(cm[i], (uint8_t **)&argv[2], argc - 2);
+			check = check && cipher_wrapper(cm[i - nb_mdc], (uint8_t **)&argv[2], argc - 2);
 	}
 
 	if (check == -1) {

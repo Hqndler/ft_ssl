@@ -1,19 +1,19 @@
 #include "utils.h"
 
-#define BASE64_CHARS "ABCDEFGHIJKLMNOPQRSTUVWYZabcdefghijklmnopqrstuvwyz0123456789+/"
+#define BASE64_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 #define BASE64_PADDING '='
 
-void base64_block(char str[]) {
+void base64_block(uint8_t str[]) {
 	char convert[5] = {0};
+	fprint("%s\n", str);
 
-	convert[0] = BASE64_CHARS[str[1] >> 2];
-	convert[1] = BASE64_CHARS[str[1] << 6 & str[2] >> 4];
-	convert[2] = BASE64_CHARS[str[2] << 4 & str[3] >> 6];
-	convert[4] = BASE64_CHARS[str[3] | 0b001111];
+	convert[0] = BASE64_CHARS[str[0] >> 2];
+	convert[1] = BASE64_CHARS[((str[0] & 0b00000011) << 4) | ((str[1] & 0b11110000) >> 4)];
+	convert[2] = BASE64_CHARS[((str[1] & 0b00001111) << 2) | ((str[2] & 0b11000000) >> 6)];
+	convert[3] = BASE64_CHARS[str[2] & 0b00111111];
 
-	fprint("%s", convert);
-
+	fprint("(%s)\n", convert);
 }
 
 int32_t base64(uint8_t **argv, ft_ssl_param param, int argc) {
@@ -32,15 +32,13 @@ int32_t base64(uint8_t **argv, ft_ssl_param param, int argc) {
 	(void)param;
 	(void)argc;
 
-	char buffer[4] = {0};
+	uint8_t buffer[4] = {0};
 	uint8_t c = 0;
 	char *str = (char *)*argv;
 
-	fprint("oui");
-
 	for (int i = 0; i < ft_strlen(str); ++i) {
 		buffer[c++] = str[i];
-		if (c == 2)
+		if (c == 3)
 			base64_block(buffer);
 	}
 
