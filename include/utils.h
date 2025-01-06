@@ -26,3 +26,4 @@ void	add_buffer(char *str, uint8_t isprint);
 char	*get_buffer(void);
 void	alg_verbose(ft_ssl_param param, char *input, int file, int stdin);
 void 	alg_reverse(char *input, int file);
+int     open_file_flag(char *file, int mask);

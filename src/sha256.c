@@ -112,7 +112,7 @@ void sha256_finalize(sha256_context *ctx) {
 		while (i < 64)
 			ctx->data[i++] = 0x00;
 		sha256_transform(ctx, ctx->data);
-		memset(ctx->data, 0, 56);
+		ft_memset(ctx->data, 0, 56);
 	}
 
 	// Append to the padding the total message's length in bits and transform.
