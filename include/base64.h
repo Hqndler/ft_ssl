@@ -3,7 +3,7 @@
 #include "ft_ssl.h"
 
 typedef struct {
-	uint8_t		buffer[3];
+	uint8_t		buffer[4];
 	uint8_t		digest[5];
 	uint8_t		len;
 	int			fd;

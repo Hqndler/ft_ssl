@@ -5,9 +5,37 @@
 
 #define BASE64_PADDING '='
 
+uint8_t base64_value(uint8_t value) {
+	uint8_t i = -1;
+	while (++i < 64)
+		if (BASE64_CHARS[i] == value)
+			return i;
+	return -1;
+}
+
 void base64_init(base64_context *ctx) {
 	ctx->fd = 0;
 	ctx->len = 0;
+}
+
+void base64_block_decode(base64_context *ctx) {
+	int i = -1;
+	while (ctx->buffer[++i] != '=' && i < 3)
+		;
+	switch (i) {
+		case 3:
+			ctx->digest[2] = base64_value(ctx->buffer[3]) | \
+							 ((base64_value(ctx->buffer[2]) & 0b00000011) << 6);
+		case 2:
+			ctx->digest[1] = (base64_value((uint8_t)ctx->buffer[2]) >> 2) | \
+							 ((base64_value(ctx->buffer[1]) & 0b00001111) << 4);
+		case 1:
+			ctx->digest[0] = (base64_value(ctx->buffer[1]) >> 4) | \
+							 (base64_value(ctx->buffer[0]) << 2);
+		
+		default:
+			break;
+	}
 }
 
 void base64_block(base64_context *ctx) {
@@ -26,6 +54,22 @@ void base64_block(base64_context *ctx) {
 		default:
 			break;
 	}
+}
+
+void base64_update_decode(base64_context *ctx, uint8_t *buffer, base64_param param) {
+	int tmp;
+	(void)param;
+	while (1) {
+		tmp = read_file(ctx->fd, ctx->buffer, &buffer, 4);
+		if (tmp != 4)
+			break;
+		base64_block_decode(ctx);
+		ctx->digest[3] = 0;
+		write(0, ctx->digest, 3);
+		ft_memset(ctx->digest, 0, 3);
+	}
+	ctx->len = (uint8_t)tmp;
+
 }
 
 void base64_update(base64_context *ctx, uint8_t *buffer, base64_param param) {
@@ -54,7 +98,7 @@ void base64_finalize(base64_context *ctx, base64_param param) {
 
 	i = ft_strlen((char *)ctx->digest);
 	while (i < 4)
-		ctx->digest[i++] = '=';
+		ctx->digest[i++] = BASE64_PADDING;
 	
 	write(param.fdo, ctx->digest, 4);
 }
@@ -66,12 +110,21 @@ void base64_encode(uint8_t **argv, base64_param param) {
 	ctx.fd = param.fdi ? param.fdi : 0;
 	base64_update(&ctx, argv[0], param);
 	base64_finalize(&ctx, param);
+	if (ctx.fd)
+		close(ctx.fd);
 }
 
 void base64_decode(uint8_t **argv, base64_param param) {
 	(void)argv;
 	(void)param;
-	fprint("Inside base64 decode nothing here for now\n");
+	// fprint("Inside base64 decode nothing here for now\n");
+	base64_context ctx = {0};
+
+	base64_init(&ctx);
+	ctx.fd = param.fdi ? param.fdi : 0;
+	base64_update_decode(&ctx, argv[0], param);
+	if (ctx.fd)
+		close(ctx.fd);
 }
 
 int parse_base64(base64_param *param, char **argv) {
@@ -85,7 +138,7 @@ int parse_base64(base64_param *param, char **argv) {
 		else if (!ft_strcmp(argv[i], "-i")) {
 			check = 1;
 			if (argv[i + 1]) {
-				param->fdi = open_file_flag(argv[++i], O_WRONLY);
+				param->fdi = open_file_flag(argv[++i], O_RDONLY);
 				if (param->fdi < 0)
 					return -1;
 				param->i = 1;
@@ -109,7 +162,7 @@ int parse_base64(base64_param *param, char **argv) {
 		else
 			break;
 	}
-	if (!param->e || !param->d || !check)
+	if (!param->e && !param->d && !check)
 		param->e = 1;
 	if (!param->fdo)
 		param->fdo = 1;
