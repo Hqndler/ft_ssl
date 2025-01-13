@@ -61,8 +61,8 @@ void alg_reverse(char *input, int file) {
 	fprint(" %s", input);
 }
 
-int open_file_flag(char *file, int mask) {
-	int fd = open(file, mask);
+int open_file_flag(char *file, int mask, int mode) {
+	int fd = open(file, mask, mode);
 	if (fd < 0)
 		fprint("ft_ssl : Error : \"%s\" %s\n", file, strerror(errno));
 	return fd;

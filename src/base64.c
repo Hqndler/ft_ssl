@@ -104,12 +104,14 @@ void base64_finalize(base64_context *ctx, base64_param param) {
 }
 
 void base64_encode(uint8_t **argv, base64_param param) {
+	// fprint("encode\n");
 	base64_context ctx = {0};
 
 	base64_init(&ctx);
 	ctx.fd = param.fdi ? param.fdi : 0;
 	base64_update(&ctx, argv[0], param);
 	base64_finalize(&ctx, param);
+	write(ctx.fd, "\n", 1);
 	if (ctx.fd)
 		close(ctx.fd);
 }
@@ -123,6 +125,7 @@ void base64_decode(uint8_t **argv, base64_param param) {
 	base64_init(&ctx);
 	ctx.fd = param.fdi ? param.fdi : 0;
 	base64_update_decode(&ctx, argv[0], param);
+	write(ctx.fd, "\n", 1);
 	if (ctx.fd)
 		close(ctx.fd);
 }
@@ -138,7 +141,7 @@ int parse_base64(base64_param *param, char **argv) {
 		else if (!ft_strcmp(argv[i], "-i")) {
 			check = 1;
 			if (argv[i + 1]) {
-				param->fdi = open_file_flag(argv[++i], O_RDONLY);
+				param->fdi = open_file_flag(argv[++i], O_RDONLY, 0);
 				if (param->fdi < 0)
 					return -1;
 				param->i = 1;
@@ -150,7 +153,9 @@ int parse_base64(base64_param *param, char **argv) {
 		else if (!ft_strcmp(argv[i], "-o")) {
 			check = 1;
 			if (argv[i + 1]) {
-				param->fdo = open_file_flag(argv[++i], O_CREAT | O_WRONLY | O_TRUNC);
+				param->fdo = open_file_flag(argv[++i], 
+											O_CREAT | O_WRONLY | O_TRUNC,
+											S_IRWXU | S_IRWXG | S_IRWXO);
 				if (param->fdo < 0)
 					return -1;
 				param->o = 1;
@@ -162,7 +167,10 @@ int parse_base64(base64_param *param, char **argv) {
 		else
 			break;
 	}
-	if (!param->e && !param->d && !check)
+
+	// fprint("encode ? %d decode ? %d\n", param->e, param->d);
+
+	if (!param->e || !param->d)
 		param->e = 1;
 	if (!param->fdo)
 		param->fdo = 1;
@@ -183,6 +191,5 @@ int32_t base64(uint8_t **argv, ft_ssl_param p, int argc) {
 	else
 		base64_decode(argv, param);
 
-	fprint("\n");
 	return 0;
 }

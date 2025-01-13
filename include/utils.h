@@ -3,6 +3,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 
 #include "ft_ssl.h"
 
@@ -26,4 +29,4 @@ void	add_buffer(char *str, uint8_t isprint);
 char	*get_buffer(void);
 void	alg_verbose(ft_ssl_param param, char *input, int file, int stdin);
 void 	alg_reverse(char *input, int file);
-int     open_file_flag(char *file, int mask);
+int     open_file_flag(char *file, int mask, int mode);
