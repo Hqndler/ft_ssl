@@ -170,7 +170,7 @@ int parse_base64(base64_param *param, char **argv) {
 
 	// fprint("encode ? %d decode ? %d\n", param->e, param->d);
 
-	if (!param->e || !param->d)
+	if (!param->e && !param->d)
 		param->e = 1;
 	if (!param->fdo)
 		param->fdo = 1;
@@ -182,9 +182,7 @@ int32_t base64(uint8_t **argv, ft_ssl_param p, int argc) {
 	(void)argc;
 
 	base64_param param = {0};
-	int i = parse_base64(&param, (char **)argv);
-	argv += i;
-	argc -= i;
+	argv += parse_base64(&param, (char **)argv);
 
 	if (param.e)
 		base64_encode(argv, param);
