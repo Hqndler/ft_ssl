@@ -132,14 +132,12 @@ void base64_decode(uint8_t **argv, base64_param param) {
 
 int parse_base64(base64_param *param, char **argv) {
 	int i = -1;
-	int check;
 	while (argv[++i]) {
 		if (!ft_strcmp(argv[i], "-d"))
 			param->d = 1;
 		else if (!ft_strcmp(argv[i], "-e"))
 			param->e = 1;
 		else if (!ft_strcmp(argv[i], "-i")) {
-			check = 1;
 			if (argv[i + 1]) {
 				param->fdi = open_file_flag(argv[++i], O_RDONLY, 0);
 				if (param->fdi < 0)
@@ -151,7 +149,6 @@ int parse_base64(base64_param *param, char **argv) {
 			continue;
 		}
 		else if (!ft_strcmp(argv[i], "-o")) {
-			check = 1;
 			if (argv[i + 1]) {
 				param->fdo = open_file_flag(argv[++i], 
 											O_CREAT | O_WRONLY | O_TRUNC,
@@ -182,7 +179,10 @@ int32_t base64(uint8_t **argv, ft_ssl_param p, int argc) {
 	(void)argc;
 
 	base64_param param = {0};
-	argv += parse_base64(&param, (char **)argv);
+	int t = parse_base64(&param, (char **)argv);
+	if (t < 0)
+		return 1;
+	argv += t;
 
 	if (param.e)
 		base64_encode(argv, param);

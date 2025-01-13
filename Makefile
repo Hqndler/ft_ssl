@@ -10,7 +10,7 @@ SRC_DIR	=	src/
 OBJ_DIR	=	obj/
 
 #Source
-FILES	=	main md5 fprint utils ssl_utils sha256 base64
+FILES	=	main md5 fprint utils ssl_utils sha256 base64 des
 
 SRCS	=	$(addprefix $(SRC_DIR), $(addsuffix .c, $(FILES)))
 OBJS	=	$(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES)))
@@ -36,10 +36,6 @@ $(NAME) : $(OBJS)
 
 $(OBJ_DIR)%.o : %.c $(HEADER) Makefile | $(OBJF)
 	$(CC) $(FLAG) $(INCLUDE) -c $< -o $@
-
-md5_test:
-	@sh test/md5test.sh > test/output.txt
-	diff test/expected.txt test/output.txt
 
 clean :
 	@rm -rf $(OBJ_DIR)

@@ -17,3 +17,5 @@ typedef struct __attribute__((packed)) {
 	int		fdi;
 	int		fdo;
 } base64_param;
+
+int32_t base64(uint8_t **argv, ft_ssl_param param, int argc);

@@ -1,9 +1,9 @@
+#include "ft_ssl.h"
+#include "utils.h"
 #include "md5.h"
 #include "sha256.h"
-#include "utils.h"
-#include "ft_ssl.h"
-
-#define NBFLAGS 4
+#include "base64.h"
+#include "des.h"
 
 static uint32_t parse_arg(char **argv, ft_ssl_param *param) {
 	uint32_t i = -1;
@@ -42,11 +42,11 @@ static int32_t cipher_wrapper(int32_t (*p)(uint8_t **, ft_ssl_param, int), uint8
 // 	return argc;
 // }
 
-int32_t des(uint8_t **argv, ft_ssl_param param, int argc) {
-	(void)argv;
-	(void)param;
-	return argc;
-}
+// int32_t des(uint8_t **argv, ft_ssl_param param, int argc) {
+// 	(void)argv;
+// 	(void)param;
+// 	return argc;
+// }
 
 int32_t des_ecb(uint8_t **argv, ft_ssl_param param, int argc) {
 	(void)argv;
