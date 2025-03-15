@@ -1,5 +1,5 @@
 NAME	=	ft_ssl
-CC		=	clang
+CC		=	gcc
 FLAG	=	-Wall -Wextra -Werror -g3
 
 # DIRLIB	=	./Libft/
@@ -10,13 +10,13 @@ SRC_DIR	=	src/
 OBJ_DIR	=	obj/
 
 #Source
-FILES	=	main md5 fprint utils ssl_utils sha256 base64 des
+FILES	=	main md5 fprint utils ssl_utils sha256 hashing
 
 SRCS	=	$(addprefix $(SRC_DIR), $(addsuffix .c, $(FILES)))
 OBJS	=	$(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES)))
 
 INCLUDE	=	-I ./include# -I ./Libft
-HNAME	=	md5 sha256 utils
+HNAME	=	hashing md5 sha256 utils
 HEADER	=	$(addsuffix .h, $(HNAME))
 
 OBJF	=	.cache_exits

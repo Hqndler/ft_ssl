@@ -8,6 +8,7 @@
 
 
 #include "ft_ssl.h"
+#include "hashing.h"
 
 #define BUFFER_LEN 520
 
@@ -27,6 +28,6 @@ void	print_hexa(uint8_t *str, uint32_t len);
 int		read_file(int fd, uint8_t *input, uint8_t **buffer, uint32_t len);
 void	add_buffer(char *str, uint8_t isprint);
 char	*get_buffer(void);
-void	alg_verbose(ft_ssl_param param, char *input, int file, int stdin);
-void 	alg_reverse(char *input, int file);
+void    hash_verbose(hash_args param, int stdin, int file, char *input);
+void    hash_reverse(int file, char *input);
 int     open_file_flag(char *file, int mask, int mode);

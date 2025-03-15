@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "ft_ssl.h"
+#include "hashing.h"
 
 void print_hexa(uint8_t *str, uint32_t len) {
 	for (uint32_t i = 0; i < len; ++i)
@@ -47,7 +48,7 @@ void add_buffer(char *str, uint8_t isprint) {
 	}
 }
 
-void alg_verbose(ft_ssl_param param, char *input, int file, int stdin) {
+void hash_verbose(hash_args param, int stdin, int file, char *input) {
 	if (!param.p && stdin)
 		return fprint("(stdin)= ");
 	else if (file)
@@ -55,7 +56,7 @@ void alg_verbose(ft_ssl_param param, char *input, int file, int stdin) {
 	fprint("(\"");
 }
 
-void alg_reverse(char *input, int file) {
+void hash_reverse(int file, char *input) {
 	if (!file)
 		return fprint(" \"%s\"", input);
 	fprint(" %s", input);

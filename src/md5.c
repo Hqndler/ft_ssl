@@ -1,5 +1,6 @@
 #include "md5.h"
 #include "utils.h"
+#include "hashing.h"
 
 const uint32_t R[] = {7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
 					  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
@@ -108,17 +109,18 @@ void md5_block(md5_context *ctx) {
 	md5_step(ctx->buffer, input);
 }
 
-void md5_update(md5_context *ctx, uint8_t *buffer, ft_ssl_param param){
+void md5_update(void **ptr, hash_args param, int fd, char *input){
+	md5_context *ctx = (md5_context *)*ptr;
 	uint32_t offset = ctx->size % 64;
 
 	while (1) {
-		int tmp = read_file(ctx->fd, ctx->input, &buffer, 64);
+		int tmp = read_file(fd, ctx->input, (uint8_t **)&input, 64);
 		if (tmp <= 0)
 			break;
 		offset += tmp;
 		ctx->size += offset;
 		ctx->input[tmp] = 0;
-		if (!param.q || !ctx->fd)
+		if (!param.q || !fd)
 			add_buffer((char *)ctx->input, 0);
 		if (offset != 64)
 			break;
@@ -142,7 +144,8 @@ void md5_final_update(md5_context *ctx, uint8_t *input_buffer, uint32_t len) {
 	}
 }
 
-void md5_finalize(md5_context *ctx){
+void md5_finalize(void **ptr){
+	md5_context *ctx = (md5_context *)*ptr;
 	uint32_t input[16];
 	uint32_t offset = ctx->size % 64;
 	uint32_t padding_length = offset < 56 ? 56 - offset : (56 + 64) - offset;
@@ -168,59 +171,28 @@ void md5_finalize(md5_context *ctx){
 	}
 }
 
-static int open_file(md5_context *ctx, char *input) {
-	ctx->fd = open(input, O_RDONLY);
-	if (ctx->fd < 0)
-		return fprint("ft_ssl: md5: %s: %s", input, strerror(errno)), 1;
-	return 0;
-}
-
-int32_t md5_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
-	md5_context ctx = {0};
-
-	md5_init(&ctx);
-	ctx.fd = !(!file && !stdin) - 1;
-	
-	if (file && open_file(&ctx, (char *)input))
-		return 1;
-	
-	md5_update(&ctx, input, param);
-	md5_finalize(&ctx);
-	
-	if ((!param.q && !param.r) || (!param.q && stdin)) {
-		if (!stdin)
-			fprint("MD5 ");
-		alg_verbose(param, (char *)input, file, stdin);
-	}
-	
-	if (stdin && !file && (*(uint32_t *)&param == 16843009)) {
-		add_buffer("MD5", 1);
-		fprint("\n");
-	}
-	else if ((!param.q && param.p && stdin) || (!param.q && !file && !stdin && !param.r))
-		add_buffer(NULL, 1);
-	ft_memset(get_buffer(), 0, BUFFER_LEN);
-	print_hexa(ctx.digest, 16);
-	
-	if (!param.q && param.r && !stdin)
-		alg_reverse((char *)input, file);
-
-	if (ctx.fd > 0)
-		close(ctx.fd);
-	return 0;
-}
-
-int32_t md5(uint8_t **argv, ft_ssl_param param, int argc) {
+int32_t md5(char **argv, hash_args param, int argc) {
 	int i = -1;
 	int ret = 0;
+	md5_context ctx = {0};
+	hash_ctx ops = {
+		.fd = 0,
+		.ctx = (void *)&ctx,
+		.update = &md5_update,
+		.finalize = &md5_finalize,
+		.name = "md5",
+		.size = 16,
+	};
 
-	if (param.p || (!argc && !param.s)) {
-		ret = (ret | md5_compute(NULL, param, 0, 1));
+	if (param.p || (!argc && !param.s)){
+		md5_init(&ctx);
+		ret |= hash_compute(NULL, param, &ops, 0, 1);
 		fprint("\n");
 	}
 
 	while (++i < argc) {
-		ret = (ret | md5_compute(argv[i], param, !(param.s && i == 0), 0));
+		md5_init(&ctx);
+		ret = ret | hash_compute(argv[i], param, &ops, !(param.s && i == 0), 0);
 		fprint("\n");
 	}
 

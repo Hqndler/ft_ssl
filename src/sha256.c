@@ -1,5 +1,6 @@
 #include "sha256.h"
 #include "utils.h"
+#include "hashing.h"
 
 #define ROTATE_LEFT(a, b) (((a) << (b)) | ((a) >> (32 - (b))))
 #define ROTATE_RIGHT(a,b) (((a) >> (b)) | ((a) << (32 - (b))))
@@ -79,13 +80,15 @@ void sha256_init(sha256_context *ctx) {
 	ctx->state[7] = 0x5be0cd19;
 }
 
-void sha256_update(sha256_context *ctx, uint8_t *buffer, ft_ssl_param param) {
+void sha256_update(void **ptr, hash_args param, int fd, char *input) {
+	sha256_context *ctx = (sha256_context *)*ptr;
+
 	while (1) {
-		int tmp = read_file(ctx->fd, ctx->data, &buffer, 64);
+		int tmp = read_file(fd, ctx->data, (uint8_t **)&input, 64);
 		if (tmp <= 0)
 			break;
 		ctx->datalen += tmp;
-		if (!param.q || !ctx->fd)
+		if (!param.q || !fd)
 			add_buffer((char *)ctx->data, 0);
 		
 		if (ctx->datalen == 64) {
@@ -96,7 +99,9 @@ void sha256_update(sha256_context *ctx, uint8_t *buffer, ft_ssl_param param) {
 	}
 }
 
-void sha256_finalize(sha256_context *ctx) {
+void sha256_finalize(void **ptr) {
+	sha256_context *ctx = (sha256_context *)*ptr;
+
 	uint32_t i;
 
 	i = ctx->datalen;
@@ -141,59 +146,28 @@ void sha256_finalize(sha256_context *ctx) {
 	}
 }
 
-static int open_file(sha256_context *ctx, char *input) {
-	ctx->fd = open(input, O_RDONLY);
-	if (ctx->fd < 0)
-		return fprint("ft_ssl: sha256: %s: %s", input, strerror(errno)), 1;
-	return 0;
-}
-
-int32_t sha256_compute(uint8_t *input, ft_ssl_param param, int file, int stdin) {
-	sha256_context ctx = {0};
-
-	sha256_init(&ctx);
-	ctx.fd = !(!file && !stdin) - 1;
-	
-	if (file && open_file(&ctx, (char *)input))
-		return 1;
-	
-	sha256_update(&ctx, input, param);
-	sha256_finalize(&ctx);
-	
-	if ((!param.q && !param.r) || (!param.q && stdin)) {
-		if (!stdin)
-			fprint("SHA256 ");
-		alg_verbose(param, (char *)input, file, stdin);
-	}
-	
-	if (stdin && !file && (*(uint32_t *)&param == 16843009)) {
-		add_buffer("SHA256", 1);
-		fprint("\n");
-	}
-	else if ((!param.q && param.p && stdin) || (!param.q && !file && !stdin && !param.r))
-		add_buffer(NULL, 1);
-	ft_memset(get_buffer(), 0, BUFFER_LEN);
-	print_hexa(ctx.digest, 32);
-	
-	if (!param.q && param.r && !stdin)
-		alg_reverse((char *)input, file);
-
-	if (ctx.fd > 0)
-		close(ctx.fd);
-	return 0;
-}
-
-int32_t sha256(uint8_t **argv, ft_ssl_param param, int argc) {
+int32_t sha256(char **argv, hash_args param, int argc) {
 	int i = -1;
 	int ret = 0;
+	sha256_context ctx = {0};
+	hash_ctx ops = {
+		.fd = 0,
+		.ctx = (void *)&ctx,
+		.update = &sha256_update,
+		.finalize = &sha256_finalize,
+		.name = "sha256",
+		.size = 32,
+	};
 
 	if (param.p || (!argc && !param.s)){
-		ret |= sha256_compute(NULL, param, 0, 1);
+		sha256_init(&ctx);
+		ret |= hash_compute(NULL, param, &ops, 0, 1);
 		fprint("\n");
 	}
 
 	while (++i < argc) {
-		ret = ret | sha256_compute(argv[i], param, !(param.s && i == 0), 0);
+		sha256_init(&ctx);
+		ret = ret | hash_compute(argv[i], param, &ops, !(param.s && i == 0), 0);
 		fprint("\n");
 	}
 

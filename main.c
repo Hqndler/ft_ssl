@@ -2,10 +2,11 @@
 #include "utils.h"
 #include "md5.h"
 #include "sha256.h"
-#include "base64.h"
-#include "des.h"
+// #include "base64.h"
+// #include "des.h"
+#include "hashing.h"
 
-static uint32_t parse_arg(char **argv, ft_ssl_param *param) {
+static uint32_t parse_hash(char **argv, hash_args *param) {
 	uint32_t i = -1;
 	while (argv[++i]) {
 		if (!ft_strcmp(argv[i], "-r"))
@@ -22,39 +23,39 @@ static uint32_t parse_arg(char **argv, ft_ssl_param *param) {
 	return i;
 }
 
-static int32_t wrapper(int32_t (*p)(uint8_t **, ft_ssl_param, int), uint8_t ** argv, int argc) {
-	ft_ssl_param param = {};
-	uint32_t i = parse_arg((char **)argv, &param);
+static int32_t hash_wrapper(int32_t (*p)(char **, hash_args, int), char ** argv, int argc) {
+	hash_args param = {};
+	uint32_t i = parse_hash(argv, &param);
 
 	return p(&argv[i], param, argc - i);
 }
 
-static int32_t cipher_wrapper(int32_t (*p)(uint8_t **, ft_ssl_param, int), uint8_t ** argv, int argc) {
-	ft_ssl_param param = {};
-	uint32_t i = parse_arg((char **)argv, &param);
+static int32_t cipher_wrapper(int32_t (*p)(char **, hash_args, int), char ** argv, int argc) {
+	hash_args param = {};
+	uint32_t i = parse_hash(argv, &param);
 
 	return p(&argv[i], param, argc - i);
 }
 
-// int32_t base64(uint8_t **argv, ft_ssl_param param, int argc) {
-// 	(void)argv;
-// 	(void)param;
-// 	return argc;
-// }
-
-// int32_t des(uint8_t **argv, ft_ssl_param param, int argc) {
-// 	(void)argv;
-// 	(void)param;
-// 	return argc;
-// }
-
-int32_t des_ecb(uint8_t **argv, ft_ssl_param param, int argc) {
+int32_t base64(char **argv, hash_args param, int argc) {
 	(void)argv;
 	(void)param;
 	return argc;
 }
 
-int32_t des_cbc(uint8_t **argv, ft_ssl_param param, int argc) {
+int32_t des(char **argv, hash_args param, int argc) {
+	(void)argv;
+	(void)param;
+	return argc;
+}
+
+int32_t des_ecb(char **argv, hash_args param, int argc) {
+	(void)argv;
+	(void)param;
+	return argc;
+}
+
+int32_t des_cbc(char **argv, hash_args param, int argc) {
 	(void)argv;
 	(void)param;
 	return argc;
@@ -63,8 +64,8 @@ int32_t des_cbc(uint8_t **argv, ft_ssl_param param, int argc) {
 int main(int argc, char **argv) {
 	if (argc < 2)
 		return fprint("usage: ft_ssl command [flags] [file/string]\n"), 0;
-	int32_t (*mdc[])(uint8_t **, ft_ssl_param, int) = {md5, sha256};
-	int32_t (*cm[])(uint8_t **, ft_ssl_param, int) = {base64, des, des_ecb, des_cbc};
+	int32_t (*mdc[])(char **, hash_args, int) = {md5, sha256};
+	int32_t (*cm[])(char **, hash_args, int) = {base64, des, des_ecb, des_cbc};
 	char *name[] = {"md5", "sha256", "base64", "des", "des-ecb", "des-cbc"};
 	char *fmd[] = {"-p", "-q", "-r", "-s"};
 	int check = -1;
@@ -73,12 +74,12 @@ int main(int argc, char **argv) {
 
 	for (int i = 0; i < nb_mdc; ++i) {
 		if (!ft_strcmp(argv[1], name[i]))
-			check = check && wrapper(mdc[i], (uint8_t **)&argv[2], argc - 2);
+			check = check && hash_wrapper(mdc[i], &argv[2], argc - 2);
 	}
 
 	for (int i = nb_mdc; i < nb_mdc + nb_cm; ++i) {
 		if (!ft_strcmp(argv[1], name[i]))
-			check = check && cipher_wrapper(cm[i - nb_mdc], (uint8_t **)&argv[2], argc - 2);
+			check = check && cipher_wrapper(cm[i - nb_mdc], &argv[2], argc - 2);
 	}
 
 	if (check == -1) {
